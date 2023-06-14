@@ -84,15 +84,15 @@ print(buffer_str)
 ```
 
 ### File loader
-The file_loader function is used to load text from a PDF or text file. The function returns the extracted text as a string.
+The load_files_from_path function is used to load all the pdf and txt file in a directory or a single pdf/txt file. The function returns a list of tuples (file_name, content_string).
 
 Example usage:
 ```
-pdf_text = nanochain.file_loader("document.pdf")
-print(pdf_text)
+pdf_text = nanochain.load_files_from_path("document.pdf")
+print(pdf_text[0][1])
 
-txt_text = nanochain.file_loader("document.txt")
-print(txt_text)
+txt_text = nanochain.load_files_from_path("document.txt")
+print(txt_text[0][1])
 ```
 
 ### Text splitting

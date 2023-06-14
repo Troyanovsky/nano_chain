@@ -4,6 +4,7 @@ import PyPDF2
 import time
 import demjson3 as json
 import re
+import os
 
 def get_API_Response(prompt,system_prompt="You are a helpful assistant",stop=None):
     try:
@@ -20,7 +21,7 @@ def get_API_Response(prompt,system_prompt="You are a helpful assistant",stop=Non
         return response
     except openai.error.RateLimitError as e:
         time.sleep(5)
-        return get_API_Response(prompt)
+        return get_API_Response(prompt, system_prompt, stop)
     
 class SummaryBufferMemory:
     def __init__(self, word_limit=1000):
@@ -62,19 +63,42 @@ class SummaryBufferMemory:
     def count_words(self, text):
         return len(text.split())
     
-def file_loader(path):
-    if path.endswith('.pdf'):
-        pdf_file = open(path, 'rb')
-        pdf_reader = PyPDF2.PdfReader(pdf_file)
-        text = ''
-        for page in pdf_reader.pages:
-            text += page.extract_text()
-        return text
-    elif path.endswith('.txt'):
-        with open(path, 'r') as txt_file:
-            return txt_file.read()
+def load_files_from_path(path):
+    def read_txt_file(file_path):
+        with open(file_path, 'r', encoding='utf-8') as f:
+            return f.read()
+
+    def read_pdf_file(file_path):
+        try:
+            with open(file_path, 'rb') as pdf_file:
+                pdf_reader = PyPDF2.PdfFileReader(pdf_file)
+                text = ''
+                for page in pdf_reader.pages:
+                    text += page.extract_text()
+            return text
+        except PyPDF2.utils.PdfReadError:
+            raise ValueError('Password protected PDF file.')
+
+    if os.path.isfile(path):
+        if path.endswith('.pdf'):
+            return [(os.path.basename(path), read_pdf_file(path))]
+        elif path.endswith('.txt'):
+            return [(os.path.basename(path), read_txt_file(path))]
+        else:
+            raise ValueError('Unsupported file format. Use txt or pdf file.')
+    elif os.path.isdir(path):
+        files_data = []
+        for root, dirs, files in os.walk(path):
+            for file in files:
+                if file.endswith('.pdf') or file.endswith('.txt'):
+                    file_path = os.path.join(root, file)
+                    if file.endswith('.pdf'):
+                        files_data.append((file, read_pdf_file(file_path)))
+                    else:
+                        files_data.append((file, read_txt_file(file_path)))
+        return files_data
     else:
-        raise ValueError('Unsupported file format')
+        raise ValueError('Invalid path.')
     
 def text_splitter(string, n_words=500, overlap=50):
     words = string.split()
