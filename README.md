@@ -2,12 +2,12 @@
 NanoChain is a Python library designed to provide a suite of useful tools for text processing, vector indexing, and utilizing OpenAI's GPT-3.5-turbo model to perform various tasks.
 
 ## Features
-GPT-3.5-turbo API integration
-Summary buffer memory for conversation summarization
-Text file and PDF file loader
-Text splitting for large texts
-Vector indexing using the ChromaDB library
-ReActAgent for performing tasks using available tools
+- GPT API Completion
+- Summary buffer memory for conversation summarization
+- Text file and PDF file loader
+- Text splitting for large texts
+- Vector indexing using the ChromaDB library
+- ReActAgent for performing tasks using available tools
 
 ## Installation
 To install:
@@ -19,6 +19,12 @@ pip install nanochain
 In order to use the NanoChain library, import it into your Python script as shown below:
 ```
 import nanochain
+
+# Set up OpenAI Key
+export OPENAI_API_KEY='sk-...'
+# or
+import openai
+openai.api_key = "sk-..."
 ```
 
 ### GPT API Completion
