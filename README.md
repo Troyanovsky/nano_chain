@@ -21,8 +21,16 @@ In order to use the NanoChain library, import it into your Python script as show
 import nanochain
 ```
 
-### GPT-3.5-turbo API integration
+### GPT API Completion
 The get_API_Response function is used to interact with the GPT-3.5-turbo API. It sends a prompt and returns the response from the model.
+
+Input:
+- prompt (string): The message for which you want to generate a response.  
+- system_prompt (string, optional): The prompt to use as the system text in the conversation history. Default is "You are a helpful assistant".  
+- stop (string, optional): A sequence of characters at which generation should stop.  
+
+Output:
+- response (string): The generated response from GPT-3.5-Turbo.  
 
 Example usage:
 ```
@@ -33,9 +41,40 @@ print(response)
 ### SummaryBufferMemory
 The SummaryBufferMemory class is used to store and summarize a conversation. It can be initialized with an optional word_limit parameter.
 
+When using with GPT, you mainly pass the buffer_messages_string() and summary to GPT as the prompt.
+
+Methods/Attributes:
+- 'buffer_messages_string()' returns a string representation of all messages currently in the buffer.  
+- 'summarize_messages()' generates a summary of all messages in the buffer and returns it as a string. The summary is generated using an API call that summarizes conversation history in 150 words or less.  
+- 'add_message(role, message)' adds a new message to the buffer. The 'role' parameter is a string representing who sent the message (either "AI" or "human"), and 'message' is a string representing the content of the message.  
+- 'delete_last_message()' removes the last message added to the buffer.  
+- 'count_words(text)' counts the number of words in a given text string. 
+- all_messages: A list of all messages.
+- summary: A string containing the summary of the conversation so far.
+
 Example usage:
 ```
-summary_buffer = nanochain.SummaryBufferMemory(word_limit=1000)
+# Create a new SummaryBufferMemory object with a word limit of 500
+sbm = SummaryBufferMemory(word_limit=500)
+
+# Add some messages to the buffer
+sbm.add_message("AI", "Hello, how can I help you today?")
+sbm.add_message("human", "I'm having trouble with my email.")
+sbm.add_message("AI", "What seems to be the problem?")
+
+# Generate a summary of the conversation so far
+summary = sbm.summarize_messages()
+print(summary)
+
+# Delete the last message added to the buffer
+sbm.delete_last_message()
+
+# Add another message
+sbm.add_message("human", "I keep getting an error message when I try to send an email.")
+
+# Check the current contents of the buffer
+buffer_str = sbm.buffer_messages_string()
+print(buffer_str)
 ```
 
 ### File loader
@@ -43,8 +82,11 @@ The file_loader function is used to load text from a PDF or text file. The funct
 
 Example usage:
 ```
-text = nanochain.file_loader("document.pdf")
-print(text)
+pdf_text = nanochain.file_loader("document.pdf")
+print(pdf_text)
+
+txt_text = nanochain.file_loader("document.txt")
+print(txt_text)
 ```
 
 ### Text splitting
@@ -56,8 +98,15 @@ sections = nanochain.text_splitter(text, n_words=500, overlap=50)
 print(sections)
 ```
 
-### Vector indexing
+### Vector Database
 The vectorIndex class is used for indexing and querying text documents using the ChromaDB library.
+
+Methods/Attributes:
+- vectorIndex(documents): Initializes a new vector index object with the given documents. The documents parameter is a list of strings, where each string represents a document to be added to the index.
+- add_documents(documents): Adds new documents to the index. The documents parameter is a list of strings, where each string represents a document to be added.
+- query_documents(query_string, n_results=3): Executes a query against the index and returns the top n matching results as a dictionary. The query_string parameter is a string representing the query to execute, and n_results is an optional integer that specifies the maximum number of results to return (default value is 3).
+- delete_documents(ids): Deletes the documents with the specified ids from the index. The ids parameter is a list of strings, where each string represents the id of a document to be deleted.
+- persist(): saves the database to a local directory.
 
 Example usage:
 ```
@@ -69,6 +118,14 @@ print(results)
 
 ### ReActAgent
 The ReActAgent class is designed to perform tasks using available tools. You can add or remove tools, and run the agent with a given task string.
+
+Methods/Attributes:
+- ReActAgent(verbose=False, max_steps=10): Initializes a new ReActAgent object. The verbose parameter is an optional boolean that determines whether to print out the thought/action/action input/observation for each step (default is False). The max_steps parameter is an optional integer that specifies the maximum number of steps allowed before the agent stops (default is 10).
+- add_tool(tool): Adds a new tool to the list of available tools. The tool parameter is a tuple with three elements: a string representing the name of the tool, a string representing the description of the tool, and a callable function that represents the implementation of the tool.
+- remove_tool(tool_name): Removes a tool from the list of available tools by its name.
+- get_action(task_string): Generates a string representation of the next action to take based on the current task. The task_string parameter is a string representing the input task/question.
+- parse_and_execute(action_string): Parses an action string into its corresponding thought, action, action input, and observation, and executes the appropriate tool function. The action_string parameter is a string representing the action to take.
+- run(task_string): Executes the entire ReAct process, taking steps until a final answer is generated or the maximum number of steps is reached. The task_string parameter is a string representing the input task/question.
 
 Example usage:
 ```
