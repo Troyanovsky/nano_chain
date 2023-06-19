@@ -23,6 +23,22 @@ def get_API_Response(prompt,system_prompt="You are a helpful assistant",stop=Non
         time.sleep(5)
         return get_API_Response(prompt, system_prompt, stop)
     
+def summarize_conversation(message_string, previous_summary):
+    summary_template = f'''
+    Below is a conversation between a user and an assistant. Summarize the conversation in 200 words or less.
+
+    Previous summary:
+    ```
+    {previous_summary}
+    ```
+    New messages:
+    ```
+    {message_string}
+    ```
+    '''
+    new_summary = get_API_Response(summary_template)
+    return new_summary
+
 class SummaryBufferMemory:
     def __init__(self, word_limit=1000):
         self.all_messages = []
@@ -40,12 +56,11 @@ class SummaryBufferMemory:
         else:
             messages = ""
         prev_summary = self.summary
-        summarize_template = f'Summarize the following conversation between an AI and a human in 150 words. The summary must retain all important information. Conversation history:```{messages}``` Previous summary: ```{prev_summary}```'
-        summary = get_API_Response(summarize_template)
-        self.summary = summary
+        new_summary = summarize_conversation(messages, prev_summary)
+        self.summary = new_summary
         self.buffer_word_count = 0
         self.buffer_messages = []  # Clear the buffer after summarizing
-        return summary
+        return new_summary
 
     def add_message(self, role, message):
         new_message_word_count = self.count_words(f"{role}: {message}")
@@ -59,7 +74,7 @@ class SummaryBufferMemory:
         if len(self.buffer_messages) > 0:
             self.buffer_messages.pop()
             self.all_messages.pop()
-    
+
     def count_words(self, text):
         return len(text.split())
     
@@ -71,13 +86,13 @@ def load_files_from_path(path):
     def read_pdf_file(file_path):
         try:
             with open(file_path, 'rb') as pdf_file:
-                pdf_reader = PyPDF2.PdfFileReader(pdf_file)
+                pdf_reader = PyPDF2.PdfReader(pdf_file)
                 text = ''
                 for page in pdf_reader.pages:
                     text += page.extract_text()
             return text
-        except PyPDF2.utils.PdfReadError:
-            raise ValueError('Password protected PDF file.')
+        except Exception as e:
+            raise ValueError('Cannot read this PDF file')
 
     if os.path.isfile(path):
         if path.endswith('.pdf'):
@@ -92,10 +107,14 @@ def load_files_from_path(path):
             for file in files:
                 if file.endswith('.pdf') or file.endswith('.txt'):
                     file_path = os.path.join(root, file)
-                    if file.endswith('.pdf'):
-                        files_data.append((file, read_pdf_file(file_path)))
-                    else:
-                        files_data.append((file, read_txt_file(file_path)))
+                    try:
+                        if file.endswith('.pdf'):
+                            files_data.append((file, read_pdf_file(file_path)))
+                        else:
+                            files_data.append((file, read_txt_file(file_path)))
+                    except Exception as e:
+                        print(f"Error while reading file {file_path}: {e}")
+                        continue
         return files_data
     else:
         raise ValueError('Invalid path.')
@@ -110,6 +129,11 @@ def text_splitter(string, n_words=500, overlap=50):
     for i in range(0, len(words) - overlap, n_words - overlap):
         section = words[i:i + n_words]
         sections.append(' '.join(section))
+
+    # Check if the last section is too short
+    if len(sections[-1].split()) < overlap:
+        last_section = sections.pop()
+        sections[-1] = ' '.join([sections[-1], last_section])
 
     return sections
 
@@ -264,3 +288,16 @@ Question: {task_string}
                 print(action_str)
                 print(param_str)
                 print(result_str)
+
+def get_recursive_summary(input_string):
+    summary = "No previous summary"
+    segments = text_splitter(input_string, 1500, 50)
+
+    for segment in segments:
+        summary_template = f'''Based on the previous summary and new information.
+        Previous summary: ```{summary}```
+        New information: ```{segment}```
+        Refine the summary to combine the information from the previous summary and new information. The new summary should be complete and self-contained.
+        Reply the new summary ONLY and NOTHING ELSE. Summary format should be in bullet points.'''
+        new_summary = get_API_Response(summary_template)
+    return new_summary

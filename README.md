@@ -143,3 +143,11 @@ task_string = "Find the capital of France."
 result = agent.run(task_string)
 print(result)
 ```
+
+### Recursive Summary
+The get_recursive_summary function is used to generate a summary of a text using a recursive summarization algorithm.
+
+Example usage:
+```
+summary = nanochain.get_recursive_summary(text)
+```
