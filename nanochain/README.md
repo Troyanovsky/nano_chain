@@ -1,15 +1,3 @@
-Metadata-Version: 2.1
-Name: nanochain
-Version: 0.3
-Summary: NanoChain is a Python library designed to provide a suite of useful tools for text processing, vector indexing, and utilizing OpenAI's GPT API to perform various tasks. This is a minimalistic implementation of LangChain because it's too complicated and difficult to customize.
-Home-page: https://github.com/Troyanovsky/nano_chain
-Author: Troy (Guodong) Zhao
-Author-email: gzhao1997@gmail.com
-Classifier: Programming Language :: Python :: 3
-Classifier: License :: OSI Approved :: MIT License
-Classifier: Operating System :: OS Independent
-Description-Content-Type: text/markdown
-
 # NanoChain Library Documentation
 NanoChain is a Python library designed to provide a suite of useful tools for text processing, vector indexing, and utilizing OpenAI's GPT-3.5-turbo model to perform various tasks.
 
